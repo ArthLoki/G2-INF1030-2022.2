@@ -1,14 +1,51 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-    <meta charset="UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <style src='./style.css'></style>
-    <title>Wolf Run</title>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <!--   <link rel="stylesheet" href="styles.css"> -->
+  <!--   <script src="./script.js"></script> -->
+  <title>Wolf Run</title>
 </head>
+
 <body>
-    <canvas id="cv" width="800" height="800" style="border: 2px solid black; display: flex;"></canvas>
-    <script src="./script.js"></script>
+  <canvas id="cv"></canvas>
+  <br><br>
+  <div id='selects'>
+    <select id='personagens'>
+      <option selected value='.' id='Escolha o seu personagem...' name='animal'>Escolha o seu personagem...</option>
+      <option value='Imagens/Personagens/wolf/wolf1.gif' id='Wolf' name="animal">Wolf</option>
+      <option value='Imagens/Personagens/kitty/kitty1.gif' id='Kitty' name="animal">Kitty</option>
+      <option value='Imagens/Personagens/mavis/mavis1.gif' id='Mavis' name="animal">Mavis</option>
+    </select>
+    <select id='dificuldade'>
+      <option selected value='.' name='dificuldade'>Escolha a dificuldade...</option>
+      <option value='facil' name='dificuldade'>Fácil</option>
+      <option value='normal' name='dificuldade'>Normal</option>
+      <option value='expert' name='dificuldade'>Expert</option>
+    </select>
+
+    <button id='startButton'>Start</button>
+  </div>
+
+  <div id='infos'>
+    <p id='counters' style="display: none;">
+      <!--       <strong>VIDAS: </strong><span id='numVidas'>0</span>
+      &nbsp;&nbsp;&nbsp; -->
+      <strong>FRAGMENTOS: </strong><span id='numFragmentos'>0</span>
+    </p>
+
+    <p id="dicaText" style="display: none;">Para pular, basta clicar na barra de espaço.</p>
+  </div>
+
+  <img id='characterImage' src='' style="display: none;">
+  <img id='obstacleImage' src="Imagens/Obstacle/obstaculo_resized_final.png" style="display: none;">
+  <img id='jewelImage' src="Imagens/Fragmento/fragmento.png" style="display: none;">
+
+  <script src="Javascript/game.js"></script>
+
 </body>
+
 </html>

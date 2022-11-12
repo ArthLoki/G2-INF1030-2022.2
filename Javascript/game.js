@@ -10,26 +10,28 @@ var LARGURA = 600;
 cv.width = LARGURA;
 cv.height = ALTURA;
 
-// global variables of the elements
-var obstacle = document.getElementById("obstacleImage");
+// global variables
+var obstacle = document.getElementById("obstacleImage");  // imagem do obstáculo
 var obstacleHeight = 99;
 
-var selectedAnimal = document.getElementById('personagens');
-var chosenCharacter = document.getElementById('characterImage');
+var selectedAnimal = document.getElementById('personagens');  // select com as opções de persogame e a opção selecionada
+var chosenCharacter = document.getElementById('characterImage');  // imagem do personagem escolhido
 var personagem = '';
+var counterImage = 1;
 
-var selectedDificuldade = document.getElementById('dificuldade');
+var selectedDificuldade = document.getElementById('dificuldade'); // select com as opções de dificuldade e a opção selecionada
 var dificuldade = '';
 
-var jewel = document.getElementById('jewelImage');
-var jewelAppeared = false;
+var jewel = document.getElementById('jewelImage');  // imagem do fragmento/jóia
+var jewelAppeared = false;  // Verifica se a jóia apareceu ou não para o controle de colisão com a jóia
 
-var startButton = document.getElementById('startButton');
+var startButton = document.getElementById('startButton');  // botão de iniciar
 startButton.disabled = true;
 
 var personagemSelecionado = false;  // Verifica se o jogador selecionou um personagem
 var dificuldadeSelecionada = false; // Verifica se o jogador selecionou uma dificuldade
 
+// verifica a opção de personagem escolhida e, se não for válida (no caso, "Escolha o seu personagem..."), a variável booleana personagemSelecionado é false. Caso contrário, a variável personagemSelecionado é true. Além disso, caso personagemSelecionado e dificuldadeSelecionada forem true, habilita o botão de start. Caso contrário, ele fica desabilitado.
 selectedAnimal.onchange = function() {
   personagem = selectedAnimal.options[selectedAnimal.selectedIndex].text;
   if (personagem != "Escolha o seu personagem...") {
@@ -44,6 +46,7 @@ selectedAnimal.onchange = function() {
   }
 }
 
+// verifica a opção de dificuldade escolhida e, se não for válida (no caso, "Escolha a dificuldade..."), a variável booleana dificuldadeSelecionada é false. Caso contrário, a variável dificuldadeSelecionada é true. Além disso, caso personagemSelecionado e dificuldadeSelecionada forem true, habilita o botão de start. Caso contrário, ele fica desabilitado.
 selectedDificuldade.onchange = function() {
   dificuldade = selectedDificuldade.options[selectedDificuldade.selectedIndex].text;
   if (dificuldade != "Escolha a dificuldade...") dificuldadeSelecionada = true;
@@ -58,20 +61,47 @@ selectedDificuldade.onchange = function() {
 
 var gameOver = false;  // verifica se o jogo acabou ou não
 var gameStarted = false; // verifica se o jogo começou ou não
-var colision = false;  // verifica se houve colisão com obstáculo
+var colisionObstacle = false;  // verifica se houve colisão com obstáculo
+var colisionJewel = false; // verifica se houve colisão com a jóia
 
 var dicaText = document.getElementById("dicaText");
 
 var vida_fragmento_text = document.getElementById("counters");
-// var numLife = document.getElementById("numVidas");
+// var numLife = document.getElementById("numVidas");  // Estou pensando em tirar isso
 var numFragmentos = document.getElementById("numFragmentos");
+
+var tempoParagrafoText = document.getElementById("tempoParagrafo");  // parágrafo do texto do contador de tempo
+var contadorTempo = document.getElementById('contadorTempo');  // contador que terá seu valor decrementado ao longo do tempo. Além disso, será incrementado quando tiver colisão com uma jóia/um fragmento
+
+var tempoAdicionalText = document.getElementById('tempoAdicionalText');  // texto que será mostrado quando houver colisão com o fragmento
+var totaltempoAdicional = document.getElementById('tempoAdicional');  // valor do tempo que será adicionado quando houver colisão com o fragmento
 
 var velocidadeDificuldades = [200, 400, 600];  // easy: 200ms, normal: 400ms and expert: 600ms
 var intervalAnimals = [80, 30, 40]; // used in setInterval. Each animal has its own interval (Wolf: 80ms, Kitty: 30ms and Mavis: 40ms)
+var tempoLoopDificuldade = [10000, 6000, 4000];  // tempo no qual o jogo rodará de acordo com a dificuldade
 
-var timer_obstacle, timer_animal;
-var velocidade;
+var timer_obstacle, timer_characterWalk;
+var velocidade_dificuldade_obstacle, intervalCharacterAnimation, tempoPorDificuldade;
 var xInitialPosition_obstacle = 601;
+
+// A partir da escolha da dificuldade, a variável velocidade_dificuldade_obstacle recebe o valor correspondente da velocidade do obstáculo presentes no vetor velocidadeDificuldades
+if (dificuldade == 'Fácil') {
+  velocidade_dificuldade_obstacle = velocidadeDificuldades[0];
+  tempoPorDificuldade = tempoLoopDificuldade[0];
+} else if (dificuldade == 'Normal') {
+  velocidade_dificuldade_obstacle = velocidadeDificuldades[1];
+  tempoPorDificuldade = tempoLoopDificuldade[1];
+} else if (dificuldade == 'Expert') {
+  velocidade_dificuldade_obstacle = velocidadeDificuldades[2];
+  tempoPorDificuldade = tempoLoopDificuldade[2];
+}
+
+// A partir da escolha do personagem, a variável intervalCharacterAnimation recebe o valor correspondente do intervalo da animação presentes no vetor intervalAnimals
+if (personagem == "Wolf") {
+  intervalCharacterAnimation = intervalAnimals[0];
+} else if (personagem == "Mavis") {
+  intervalCharacterAnimation = intervalAnimals[2];
+}
 
 
 // Functions
@@ -83,18 +113,18 @@ MENU
 *************************************/
 
 // Loads the menu
-function menu() {
+function menu() {   // OK, it's working
   /*
   IDEIA:
   Desenhar o menu no canvas.
   */
 
   // big green rect
-  cv.style.backgroundColor = "#383C5C";  // purple
+  cv.style.backgroundColor = "#383C5C";
 
   // title
   ctx.font = "100px Comic Sans MS";
-  ctx.fillStyle = "#FCE6E3";  // purple
+  ctx.fillStyle = "#FCE6E3";
 
 
 
@@ -109,15 +139,15 @@ function menu() {
   var text1 = "Antes de começar, escolha um personagem e"
   var text2 = "uma dificuldade";
 
-  var xText1 = 70; // fixo em 70
-  var yText1 = 350 + 100; // default: 210
+  var xText1 = 70;
+  var yText1 = 350 + 100;
 
   ctx.fillStyle = "black";
   ctx.font = "23px Arial";
   ctx.fillText(text1, xText1, yText1);
   ctx.fillText(text2, xText1 + 150, yText1 + 30);
 
-  // 2 - authors
+  // 2 - Authors
   var text3 = "Authors:"
   var author1 = "Alex Nicolas";
   var author2 = "Luiza Bretas";
@@ -142,32 +172,27 @@ OBSTACLE
 *************************************/
 
 // controls the moviment/loop of the obstacles
-function moveObstacle() {
+function moveObstacle() {  // BugFix
   /*
   IDEIA:
   Começar com posição x = 601 e ir andando para frente até x = -obstacle.width; 
   Quando chegar em x = -obstacle.width, retornar para x = 601 e assim por diante até a pessoa perder ou ganhar.
   */
 
-  var loop = true;
   var dx = +2;
   var xPosition;
 
-  while (loop == true) {
-    ctx.clearRect(0, 0, cv.width, cv.height);
+  while (gameOver == false) {
     xPosition = xInitialPosition_obstacle - dx;
+    ctx.clearRect(xPosition, cv.height - obstacleHeight, obstacle.width, obstacleHeight);
     if (xPosition == -obstacle.width) {
       xPosition = xInitial_obstacle;
     }
-    obstacle.onload = function() {
-      ctx.drawImage(obstacle, xPosition, cv.height - obstacleHeight);
-    }
+    // obstacle.onload = function() {
+    ctx.drawImage(obstacle, xPosition, cv.height - obstacleHeight);
+    // }
 
     jewelRandomHeightPosition(xPosition);
-
-    if (gameOver == true) {
-      loop = false;
-    }
   }
 }
 
@@ -178,31 +203,33 @@ CHARACTER
 
 *************************************/
 
-// shows chosenCharacter
-function showChosenCharacter() {
-
-  if (personagem == 'Wolf') {
-    chosenCharacter.width = "120%";
-    chosenCharacter.height = "120%";
-  } else if (personagem == 'Mavis') {
-    chosenCharacter.width = "50%";
-    chosenCharacter.height = "50%";
+// shows chosenCharacter and its animation
+function walkingAnimal(nImages, character) {
+  if (counterImage == nImages) {
+    counterImage = 1;
+  } else {
+    counterImage += 1;
   }
-
-  chosenCharacter.onload = () => {
+  chosenCharacter.src = 'Imagens/Personagens/' + character + '/' + character + i + '.gif';
+  chosenCharacter.onload = function() {
     ctx.drawImage(chosenCharacter, 0, cv.height - chosenCharacter.height);
   }
 }
 
-// function to make the character walk
-function characterWalk() {
-  /*
-  IDEIA:
-  Criar uma animação de cada personagem com setInterval, de modo que cada um vai ter o seu tempo de animação.
-    Wolf: 80ms,
-    Mavis: 40 ms,
-    Kitty: 30 ms.
-  */
+function chosenCharacterWalking() {   // BugFix
+
+  var personagemEscolhido = selectedAnimal.options[selectedAnimal.selectedIndex].id;
+  console.log(personagemEscolhido);
+
+  if (personagemEscolhido == 'wolf') {
+    chosenCharacter.width = "120%";
+    chosenCharacter.height = "120%";
+    walkingAnimal(21, personagemEscolhido);
+  } else if (personagemEscolhido == 'mavis') {
+    chosenCharacter.width = "50%";
+    chosenCharacter.height = "50%";
+    walkingAnimal(24, personagemEscolhido);
+  }
 }
 
 // function to make the character jump
@@ -224,22 +251,22 @@ function colision2obstacle() {
 function pickUpJewel() {
   /*
   IDEIA:
-  Implementar a captura da jóia/colisão com a jóia.
+  Implementar a colisão com a jóia.
   */
 }
 
 
 /*************************************
-
+ 
 JEWEL 
-
+ 
 *************************************/
 
 // get random position of the jewel
 function jewelRandomHeightPosition(xObstacle) {
   /*
   IDEIA:
-  Tornar a aparição do fragmento/jóia randômica e em posições verticais diferentes.
+  Tornar a aparição do fragmento/jóia randômica e em posições no eixo y diferentes.
   */
   var randomHeight = Math.floor(Math.random() * 200) + 5;
   var randomAppearence = Math.floor(Math.random() * 2);
@@ -256,9 +283,9 @@ function jewelRandomHeightPosition(xObstacle) {
 
 
 /*************************************
-
+ 
 GAME
-
+ 
 *************************************/
 
 // function that controls the game and its loops
@@ -271,31 +298,41 @@ function game() {
   selectedAnimal.style.display = "none";
 
   vida_fragmento_text.style.display = '';
+  tempoParagrafoText.style.display = '';
 
-  dicaText.style.display = "block";
+  dicaText.style.display = "";
 
   // background image
   cv.style.backgroundImage = "url('Imagens/Background/background4_final.jpg')";  // sets background image
 
-  if (dificuldade == 'Fácil') {
-    velocidade = velocidadeDificuldades[0];
-  } else if (dificuldade == 'Normal') {
-    velocidade = velocidadeDificuldades[1];
-  } else if (velocidade == 'Expert') {
-    velocidade = velocidadeDificuldades[2];
-  }
-  console.log(dificuldade);
+  ctx.fillStyle = 'black';
+  ctx.font = "23px Arial";
+  textDificuldadeGame = 'Dificuldade ' + dificuldade
+  ctx.fillText(textDificuldadeGame, (cv.width / 2) - (textDificuldadeGame.length + 80), 30);
+  ctx.fill();
 
-  if (gameOver == false) {
-    // obstacle
-    timer_obstacle = setInterval(moveObstacle, velocidade);
+  gameStarted = true;
+  gameOver = false;
+  if (gameStarted == true && gameOver == false) {
+    var i = tempoPorDificuldade;
+    while (i > 0) {
 
-    // character
+      // obstacle
+      timer_obstacle = setInterval(moveObstacle, velocidade_dificuldade_obstacle);
 
-    // colision
-    // if (colision == true) {
-    //   gameOver = true;
-    // }
+      // character
+      timer_animal = setInterval(chosenCharacterWalking, intervalCharacterAnimation);
+
+      // colision
+      if (colisionObstacle == true) {
+        gameOver = true;
+      }
+
+      // timer
+      i -= 1;
+      contadorTempo.innerText = tempoPorDificuldade;
+      // window.setTimeout(game, tempoPorDificuldade);
+    }
   }
 }
 
@@ -304,9 +341,9 @@ function restartGame() { }
 
 
 /*************************************
-
+ 
 MAIN
-
+ 
 *************************************/
 
 // Main function

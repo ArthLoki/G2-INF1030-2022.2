@@ -16,9 +16,9 @@
   <div id='selects'>
     <select id='personagens'>
       <option selected value='.' id='Escolha o seu personagem...' name='animal'>Escolha o seu personagem...</option>
-      <option value='Imagens/Personagens/wolf/wolf1.gif' id='Wolf' name="animal">Wolf</option>
-      <option value='Imagens/Personagens/kitty/kitty1.gif' id='Kitty' name="animal">Kitty</option>
-      <option value='Imagens/Personagens/mavis/mavis1.gif' id='Mavis' name="animal">Mavis</option>
+      <option value='/Imagens/Personagens/wolf/wolf1.gif' id='wolf' name="animal">Wolf</option>
+      <!--       <option value='' id='Kitty' name="animal">Kitty</option> -->
+      <option value='/Imagens/Personagens/mavis/mavis1.gif' id='mavis' name="animal">Mavis</option>
     </select>
     <select id='dificuldade'>
       <option selected value='.' name='dificuldade'>Escolha a dificuldade...</option>
@@ -31,6 +31,11 @@
   </div>
 
   <div id='infos'>
+    <p id='tempoParagrafo' style="display: none;">
+      <strong id='tempoText'>TEMPO: </strong><span id='contadorTempo'></span> s
+      &nbsp;&nbsp;&nbsp;
+      <strong id='tempoAdicionalText' style='display: none;'>+<span id='tempoAdicional'></span>s</strong>
+    </p>
     <p id='counters' style="display: none;">
       <!--       <strong>VIDAS: </strong><span id='numVidas'>0</span>
       &nbsp;&nbsp;&nbsp; -->

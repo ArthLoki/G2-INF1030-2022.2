@@ -71,7 +71,7 @@ var vida_fragmento_text = document.getElementById("counters");
 var numFragmentos = document.getElementById("numFragmentos");
 
 var tempoParagrafoText = document.getElementById("tempoParagrafo");  // parágrafo do texto do contador de tempo
-var contadorTempo = document.getElementById('contadorTempo');  // contador que terá seu valor decrementado ao longo do tempo. Além disso, será incrementado quando tiver colisão com uma jóia/um fragmento
+var contadorTempo = document.getElementById('contadorTempo').innerText;  // contador que terá seu valor decrementado ao longo do tempo. Além disso, será incrementado quando tiver colisão com uma jóia/um fragmento
 
 var tempoAdicionalText = document.getElementById('tempoAdicionalText');  // texto que será mostrado quando houver colisão com o fragmento
 var totaltempoAdicional = document.getElementById('tempoAdicional');  // valor do tempo que será adicionado quando houver colisão com o fragmento
@@ -81,10 +81,12 @@ var intervalAnimals = [80, 30, 40]; // used in setInterval. Each animal has its 
 var tempoLoopDificuldade = [10000, 6000, 4000];  // tempo no qual o jogo rodará de acordo com a dificuldade
 
 var timer_obstacle, timer_characterWalk;
-var velocidade_dificuldade_obstacle, intervalCharacterAnimation, tempoPorDificuldade;
-var xInitialPosition_obstacle = 601;
+var velocidade_dificuldade_obstacle, intervalCharacterAnimation;
+var tempoPorDificuldade = -1;
+var xObstacle = 601;
 
 // A partir da escolha da dificuldade, a variável velocidade_dificuldade_obstacle recebe o valor correspondente da velocidade do obstáculo presentes no vetor velocidadeDificuldades
+dificuldade = selectedDificuldade.options[selectedDificuldade.selectedIndex].text;
 if (dificuldade == 'Fácil') {
   velocidade_dificuldade_obstacle = velocidadeDificuldades[0];
   tempoPorDificuldade = tempoLoopDificuldade[0];
@@ -179,21 +181,23 @@ function moveObstacle() {  // BugFix
   Quando chegar em x = -obstacle.width, retornar para x = 601 e assim por diante até a pessoa perder ou ganhar.
   */
 
-  var dx = +2;
-  var xPosition;
+  var dx = 2;
+  const loop = setInterval(() => {
+    if (gameOver == false) {
+      xObstacle -= dx;
+      ctx.clearRect(xObstacle, cv.height - obstacleHeight, obstacle.width, obstacleHeight);
+      if (xObstacle == -obstacle.width) {
+        xObstacle = 601;
+      }
+      // obstacle.onload = function() {
+      ctx.drawImage(obstacle, xObstacle, cv.height - obstacleHeight);
+      // }
 
-  while (gameOver == false) {
-    xPosition = xInitialPosition_obstacle - dx;
-    ctx.clearRect(xPosition, cv.height - obstacleHeight, obstacle.width, obstacleHeight);
-    if (xPosition == -obstacle.width) {
-      xPosition = xInitial_obstacle;
+      jewelRandomHeightPosition(xObstacle);
+
+      colision2obstacle();
     }
-    // obstacle.onload = function() {
-    ctx.drawImage(obstacle, xPosition, cv.height - obstacleHeight);
-    // }
-
-    jewelRandomHeightPosition(xPosition);
-  }
+  }, velocidade_dificuldade_obstacle);
 }
 
 
@@ -210,25 +214,29 @@ function walkingAnimal(nImages, character) {
   } else {
     counterImage += 1;
   }
-  chosenCharacter.src = 'Imagens/Personagens/' + character + '/' + character + i + '.gif';
-  chosenCharacter.onload = function() {
-    ctx.drawImage(chosenCharacter, 0, cv.height - chosenCharacter.height);
-  }
+  chosenCharacter.src = 'Imagens/Personagens/' + character + '/' + character + counterImage + '.gif';
+  chosenCharacter.style.display = 'block';
 }
 
 function chosenCharacterWalking() {   // BugFix
 
   var personagemEscolhido = selectedAnimal.options[selectedAnimal.selectedIndex].id;
-  console.log(personagemEscolhido);
+  // console.log(personagemEscolhido);
 
   if (personagemEscolhido == 'wolf') {
     chosenCharacter.width = "120%";
     chosenCharacter.height = "120%";
     walkingAnimal(21, personagemEscolhido);
+    chosenCharacter.onload = function() {
+      ctx.drawImage(chosenCharacter, 0, cv.height - chosenCharacter.height);
+    }
   } else if (personagemEscolhido == 'mavis') {
     chosenCharacter.width = "50%";
     chosenCharacter.height = "50%";
     walkingAnimal(24, personagemEscolhido);
+    chosenCharacter.onload = function() {
+      ctx.drawImage(chosenCharacter, 0, cv.height - chosenCharacter.height);
+    }
   }
 }
 
@@ -246,6 +254,26 @@ function colision2obstacle() {
   IDEIA:
   Implementar a colisão do personagem com o obstáculo.
   */
+  const loop = setInterval(() => {
+    const posObstacle = obstacle.offsetLeft;
+    const posCharacterBottom = chosenCharacter.bottom.replace('px', '');
+    const posCharacterLeft = chosenCharacter.left.replace('px', '');
+    const lenObstacle = +obstacle.style.width.replace('px', '');
+    const lenCharacter = +chosenCharacter.style.width.replace('px', '');
+
+    if (posObstacle <= lenCharacter && posObstacle > 0 && posCharacterBottom < obstacleHeight) {
+      gameOver = true;
+      chosenCharacter.style.bottom = `${posCharacterBottom}px`;
+      chosenCharacter.src = 'Imagens/Derrota/fire2.png';
+
+      obstacle.style.left = `${posObstacle}px`;
+
+      clearInterval(loop);
+    } else if (posCharacterLeft >= posCharacterLeft + lenObstacle && posCharacterBottom >= obstacleHeight) {
+      tempo -= 1;
+      contadorTempo = tempo;
+    }
+  }, 10);
 }
 
 function pickUpJewel() {
@@ -313,26 +341,17 @@ function game() {
 
   gameStarted = true;
   gameOver = false;
-  if (gameStarted == true && gameOver == false) {
-    var i = tempoPorDificuldade;
-    while (i > 0) {
 
-      // obstacle
-      timer_obstacle = setInterval(moveObstacle, velocidade_dificuldade_obstacle);
+  // if (gameStarted == true && gameOver == false) {
+  // obstacle
+  // timer_obstacle = setInterval(moveObstacle, velocidade_dificuldade_obstacle);
 
-      // character
-      timer_animal = setInterval(chosenCharacterWalking, intervalCharacterAnimation);
+  // character
+  timer_animal = setInterval(chosenCharacterWalking, intervalCharacterAnimation);
 
-      // colision
-      if (colisionObstacle == true) {
-        gameOver = true;
-      }
-
-      // timer
-      i -= 1;
-      contadorTempo.innerText = tempoPorDificuldade;
-      // window.setTimeout(game, tempoPorDificuldade);
-    }
+  // colision
+  if (colisionObstacle == true) {
+    gameOver = true;
   }
 }
 
@@ -352,3 +371,80 @@ function main() {
 }
 
 main();
+
+
+
+
+
+//Test Alex
+
+
+
+
+
+
+
+// REQUEST ANIMATION FRAME
+/*
+
+
+var test_image_animal = document.getElementById("testAlex");
+var current_image_cnt = 1;
+var test_personnagem_escolhida = 'kitty';
+var img_path_test = "Imagens/Personagens/";
+var max_img_personnagem_escolhida = 14;
+
+var test_global_ID;
+var canvas2 = document.getElementById("canvas2");
+var ctx2 = canvas2.getContext('2d');
+var loaded_personagem_imgs = [];
+for (var i = 0; i < max_img_personnagem_escolhida; i++) {
+  loaded_personagem_imgs[i] = new Image();
+  loaded_personagem_imgs[i].src = img_path_test + test_personnagem_escolhida + "/" + test_personnagem_escolhida + current_image_cnt + ".gif";
+}
+
+let start, previousTimeStamp;
+let done = false
+
+
+
+var canvas2 = document.getElementById("canvas2");
+var ctx2 = canvas2.getContext('2d');
+var loaded_personagem_imgs = [];
+for (var i = 0; i < max_img_personnagem_escolhida; i++) {
+  loaded_personagem_imgs[i] = new Image();
+  loaded_personagem_imgs[i].src = img_path_test + test_personnagem_escolhida + "/" + test_personnagem_escolhida + current_image_cnt + ".gif";
+}
+
+function animationAnimal() {
+  ctx2.clearRect(0, 0, 1000, 1000)
+  ctx2.save();
+  if (!!loaded_personagem_imgs[Math.round(Date.now()) % loaded_personagem_imgs.length]) {
+    ctx2.drawImage(loaded_personagem_imgs[Math.round(Date.now()) % loaded_personagem_imgs.length], 100, 100);
+
+  }
+  ctx2.restore();
+  test_global_ID = requestAnimationFrame(animationAnimal);
+}
+test_global_ID = requestAnimationFrame(animationAnimal);
+*/
+
+
+
+
+/*
+function animationAnimal() {
+  if (current_image_cnt >= max_img_personnagem_escolhida) {
+    current_image_cnt = 1;
+  }
+  else {
+    current_image_cnt += 1;
+  }
+  //test_image_animal.src = "Imagens/Personagens/kitty/kitty10.gif";
+  test_image_animal.src = img_path_test + test_personnagem_escolhida + "/" + test_personnagem_escolhida + current_image_cnt + ".gif";
+  test_global_ID = requestAnimationFrame(animationAnimal);
+}
+test_global_ID = requestAnimationFrame(animationAnimal);*/
+
+//setInterval(animationAnimal, 30);* /
+//Fim test alex
